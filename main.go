@@ -66,6 +66,11 @@ func main() {
 		AllowAllOrigins:  false,
 		AllowOriginFunc:  func(origin string) bool { return true },
 	}))
+	// server.LoadHTMLGlob("./client/*.html")
+
+	// server.GET("/", func(c *gin.Context) {
+	// 	c.HTML(200, "index.html", nil)
+	// })
 
 	server.POST("/api/new", buildURL)
 	server.GET("/:m", redirURL)
