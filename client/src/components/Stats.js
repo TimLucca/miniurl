@@ -9,7 +9,7 @@ class Stats extends Component {
     super(props)
 
     this.state = {
-      mini: '',
+      miniurl: '',
       res: '',
       hits: '',
       submitted: false,
@@ -27,13 +27,13 @@ class Stats extends Component {
   }
 
   onSubmit = () => {
-    let {mini} = this.state 
-    mini = mini.substring(mini.length-6, mini.length)
+    let {miniurl} = this.state 
+    miniurl = miniurl.substring(miniurl.length-6, miniurl.length)
     
-    if (mini) {
+    if (miniurl) {
       axios.post(
         endpoint+'/api/current',
-        {mini},
+        {miniurl},
         {
           headers: {
             'Content-Type': 'application/json'
@@ -61,9 +61,9 @@ class Stats extends Component {
       console.log(res.data)
       return (
         <div>
-          <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.mini}>{endpoint+'/'+res.data.mini}</a></p>
+          <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.miniurl}>{endpoint+'/'+res.data.miniurl}</a></p>
           <p><strong>Original URL: </strong><a href={res.data.long}>{res.data.long}</a></p>
-          <p><strong>Hits: </strong>{res.data.Hits}</p>
+          <p><strong>Hits: </strong>{res.data.hits}</p>
         </div>
         
       )
@@ -92,7 +92,7 @@ class Stats extends Component {
 
   render() {
     const styles = {
-      padding: '2em',
+      paddingBottom: '2em',
     }
 
     return (
@@ -104,7 +104,7 @@ class Stats extends Component {
         </div>
         <div className='row' style={styles}>
           <Form onSubmit={this.onSubmit}>
-            <Input type='text' name='mini' value={this.state.mini} onChange={this.onChange} fluid placeholder='Enter miniURL' />
+            <Input type='text' name='miniurl' value={this.state.miniurl} onChange={this.onChange} fluid placeholder='Enter miniURL' />
           </Form>
         </div>
         <button onClick={this.onSubmit}>Get Stats</button>

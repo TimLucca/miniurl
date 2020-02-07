@@ -52,7 +52,7 @@ class Home extends Component {
     }
     if (res.status === 200) {
       return (
-        <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.mini}>{endpoint+'/'+res.data.mini}</a></p>
+        <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.miniurl}>{endpoint+'/'+res.data.miniurl}</a></p>
       )
     } else if(!this.state.submitted){
       return
@@ -70,7 +70,7 @@ class Home extends Component {
 
   render() {
     const styles = {
-      padding: '2em',
+      paddingBottom: '2em',
     }
 
     return (    

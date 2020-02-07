@@ -8,22 +8,23 @@ Send a `POST` request to `<domain>/api/new` with the following JSON payload:
 The server will create the minified url and return the following JSON:
 ```
 {
-  "mini": "<minified url here>",
-  "long": "<long url here>"
+  "miniurl": "<minified url here>",
+  "long": "<long url here>",
+  "hits": <number of times link was used>
 }
 ```
-To use the minified url, just enter the following in the browser: `<doman>/<minified value>`.
+To use the minified url, just enter the following in the browser: `<doman>/<minified value>`. This will redirect you to the original url.
 
 To get statistics on your minified url, send a `POST` request to `<domain>/api/current` with the following payload:
 ```
-{"mini": "<minified url here>"}
+{"miniurl": "<minified url here>"}
 ```
 This will return the following JSON:
 ```
 {
-  "mini": "<minified url here>",
+  "miniurl": "<minified url here>",
   "long": "<long url here>",
-  "hits": <number of times it was used>
+  "hits": <number of times link was used>
 }
 ```
 
