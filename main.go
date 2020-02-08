@@ -52,10 +52,18 @@ func main() {
 	server.GET("/:m", redirURL)
 	server.POST("/api/current", getStats)
 
-	err := server.Run(":8080")
+	err := server.Run(getPort())
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	return ":" + port
 }
 
 // HTTP Request functions

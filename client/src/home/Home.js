@@ -50,7 +50,7 @@ class Home extends Component {
     }
     if (res.status === 200) {
       return (
-        <p><strong>MiniURL: </strong><a href={res.data.miniurl}>{res.data.miniurl}</a></p>
+        <p><strong>MiniURL: </strong><a href={"http://"+res.data.miniurl}>{res.data.miniurl}</a></p>
       )
     } else if(!this.state.submitted){
       return
