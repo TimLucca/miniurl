@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
@@ -64,7 +63,6 @@ func getPort() string {
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Println(port)
 	return ":" + port
 }
 
@@ -105,8 +103,6 @@ func redirURL(context *gin.Context) {
 		updateMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}, bson.M{"$set": bson.M{"hits": url.Hits + 1}})
 		return
 	}
-	log.Println("Not found")
-	log.Println(db)
 	context.Status(404)
 }
 
