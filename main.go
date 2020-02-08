@@ -44,11 +44,6 @@ func main() {
 		AllowAllOrigins:  false,
 		AllowOriginFunc:  func(origin string) bool { return true },
 	}))
-	// server.LoadHTMLGlob("./client/build/*.html")
-
-	// server.GET("/", func(c *gin.Context) {
-	// 	c.HTML(200, "index.html", nil)
-	// })
 
 	server.Use(static.Serve("/", static.LocalFile("./client/build", true)))
 	server.Use(static.Serve("/stats", static.LocalFile("./client/build", true)))
@@ -66,6 +61,7 @@ func main() {
 // HTTP Request functions
 // buildURL creates the MiniURL, adds to database, and returns the mini to the user
 func buildURL(context *gin.Context) {
+
 	url, e := convertHTTPBodyToMiniStruct(context.Request.Body)
 	if e != nil {
 		context.JSON(500, e.Error())
@@ -73,6 +69,7 @@ func buildURL(context *gin.Context) {
 	}
 
 	e = url.makeMini()
+	url.MiniURL = context.Request.Host + "/" + url.MiniURL
 	if e != nil && e.Error() == "That mini already exists" {
 		context.JSON(200, struct {
 			MiniURL string `json:"miniurl"`
@@ -112,6 +109,9 @@ func getStats(context *gin.Context) {
 	if e != nil {
 		context.JSON(500, e.Error())
 		return
+	}
+	if len(url.MiniURL) > 6 {
+		url.MiniURL = url.MiniURL[len(url.MiniURL)-7 : len(url.MiniURL)-1]
 	}
 	if dburl, ok := findMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}); ok == nil {
 		context.JSON(200, dburl)

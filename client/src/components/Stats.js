@@ -2,8 +2,6 @@ import React, {Component} from 'react'
 import axios from "axios"
 import { Header, Form, Input } from 'semantic-ui-react'
 
-let endpoint = 'http://localhost:8080'
-
 class Stats extends Component {
   constructor(props) {
     super(props)
@@ -32,7 +30,7 @@ class Stats extends Component {
     
     if (miniurl) {
       axios.post(
-        endpoint+'/api/current',
+        '/api/current',
         {miniurl},
         {
           headers: {
@@ -61,7 +59,7 @@ class Stats extends Component {
       console.log(res.data)
       return (
         <div>
-          <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.miniurl}>{endpoint+'/'+res.data.miniurl}</a></p>
+          <p><strong>MiniURL: </strong><a href={res.data.miniurl}>{res.data.miniurl}</a></p>
           <p><strong>Original URL: </strong><a href={res.data.long}>{res.data.long}</a></p>
           <p><strong>Hits: </strong>{res.data.hits}</p>
         </div>

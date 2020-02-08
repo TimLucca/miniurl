@@ -2,8 +2,6 @@ import React, {Component} from 'react'
 import axios from "axios"
 import { Header, Form, Input } from 'semantic-ui-react'
 
-let endpoint = 'http://localhost:8080'
-
 class Home extends Component {
   constructor(props) {
     super(props)
@@ -30,7 +28,7 @@ class Home extends Component {
 
     if (long) {
       axios.post(
-        endpoint+'/api/new',
+        '/api/new',
         {long},
         {
           headers: {
@@ -52,7 +50,7 @@ class Home extends Component {
     }
     if (res.status === 200) {
       return (
-        <p><strong>MiniURL: </strong><a href={endpoint+'/'+res.data.miniurl}>{endpoint+'/'+res.data.miniurl}</a></p>
+        <p><strong>MiniURL: </strong><a href={res.data.miniurl}>{res.data.miniurl}</a></p>
       )
     } else if(!this.state.submitted){
       return
