@@ -1,7 +1,7 @@
 # MiniURL
 
-## Usage
-Send a `POST` request to `<domain>/api/new` with the following JSON payload:
+## Usage of the live server
+Send a `POST` request to `https://damp-brushlands-93308.herokuapp.com/api/new` with the following JSON payload:
 ```
 {"long": "<long url here>}
 ```
@@ -13,9 +13,9 @@ The server will create the minified url and return the following JSON:
   "hits": <number of times link was used>
 }
 ```
-To use the minified url, just enter the following in the browser: `<doman>/<minified value>`. This will redirect you to the original url.
+The miniurl on this request will include the entire url (ie. `https://damp-brushlands-93308.herokuapp.com/<miniurl>`). This will redirect you to the original url and increment the number of hits on that mini.
 
-To get statistics on your minified url, send a `POST` request to `<domain>/api/current` with the following payload:
+To get statistics on your minified url, send a `POST` request to `https://damp-brushlands-93308.herokuapp.com/api/current` with the following payload:
 ```
 {"miniurl": "<minified url here>"}
 ```
