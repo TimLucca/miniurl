@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
@@ -63,6 +64,7 @@ func getPort() string {
 	if port == "" {
 		port = "8080"
 	}
+	fmt.Println(port)
 	return ":" + port
 }
 
