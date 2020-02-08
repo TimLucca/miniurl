@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
@@ -13,6 +12,7 @@ import (
 	"os"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -44,11 +44,14 @@ func main() {
 		AllowAllOrigins:  false,
 		AllowOriginFunc:  func(origin string) bool { return true },
 	}))
-	// server.LoadHTMLGlob("./client/*.html")
+	// server.LoadHTMLGlob("./client/build/*.html")
 
 	// server.GET("/", func(c *gin.Context) {
 	// 	c.HTML(200, "index.html", nil)
 	// })
+
+	server.Use(static.Serve("/", static.LocalFile("./client/build", true)))
+	server.Use(static.Serve("/stats", static.LocalFile("./client/build", true)))
 
 	server.POST("/api/new", buildURL)
 	server.GET("/:m", redirURL)
@@ -72,8 +75,8 @@ func buildURL(context *gin.Context) {
 	e = url.makeMini()
 	if e != nil && e.Error() == "That mini already exists" {
 		context.JSON(200, struct {
-			MiniURL string `json"string"`
-			Error   string `json"string"`
+			MiniURL string `json:"miniurl"`
+			Error   string `json:"error"`
 		}{
 			MiniURL: url.MiniURL,
 			Error:   e.Error(),
@@ -124,10 +127,7 @@ func getStats(context *gin.Context) {
 func (u *miniAndLongURL) makeMini() error {
 	u.MiniURL = encode(hash32(u.LongURL))
 	if found, _ := findMini(bson.M{"miniurl": bson.M{"$eq": u.MiniURL}}); found.MiniURL != u.MiniURL {
-		fmt.Println(found.MiniURL)
-		fmt.Println(u.MiniURL)
 		u.Hits = 0
-		fmt.Println("Hello")
 		err := addMini(u)
 		return err
 	}
