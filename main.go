@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/list"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
@@ -20,8 +22,30 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Database collection variable
-var db *mongo.Collection
+// Global vars, includes database collection, map and list for LRU, and mutex
+var (
+	db    *mongo.Collection
+	m     map[string]*list.Element
+	lru   *list.List
+	mtx   sync.RWMutex
+	once  sync.Once
+	limit int = 512
+)
+
+// Initializes map and LRU
+func init() {
+	once.Do(initMapLRU)
+}
+func initMapLRU() {
+	m = make(map[string]*list.Element)
+	lru = list.New()
+}
+
+// key/value for LRU
+type kv struct {
+	k string
+	v string
+}
 
 // the data
 type miniAndLongURL struct {
@@ -30,6 +54,8 @@ type miniAndLongURL struct {
 	Hits    uint64 `json:"hits"`
 }
 
+// main driver for the app
+// connects to the database, initializes the server, routes requests
 func main() {
 	e := dbConnect()
 	if e != nil {
@@ -58,6 +84,7 @@ func main() {
 	}
 }
 
+// defines the port to be used based on env variable, uses 8080 if no port specified
 func getPort() string {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -69,7 +96,6 @@ func getPort() string {
 // HTTP Request functions
 // buildURL creates the MiniURL, adds to database, and returns the mini to the user
 func buildURL(context *gin.Context) {
-
 	url, e := convertHTTPBodyToMiniStruct(context.Request.Body)
 	if e != nil {
 		context.JSON(500, e.Error())
@@ -77,6 +103,7 @@ func buildURL(context *gin.Context) {
 	}
 
 	e = url.makeMini()
+	updateLRU(url.MiniURL, kv{k: url.MiniURL, v: url.LongURL})
 	url.MiniURL = context.Request.Host + "/" + url.MiniURL
 	if e != nil && e.Error() == "That mini already exists" {
 		context.JSON(200, struct {
@@ -98,9 +125,16 @@ func buildURL(context *gin.Context) {
 // it also increments the number of hits
 func redirURL(context *gin.Context) {
 	mini := context.Params.ByName("m")
+	if found := mapFind(mini).Value.(kv); found.v != "" {
+		context.Redirect(303, found.v)
+		updateLRU(mini, found)
+		updateMini(bson.M{"miniurl": bson.M{"$eq": mini}}, bson.M{"$inc": bson.M{"hits": 1}})
+		return
+	}
 	if url, ok := findMini(bson.M{"miniurl": bson.M{"$eq": mini}}); ok == nil {
 		context.Redirect(303, url.LongURL)
-		updateMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}, bson.M{"$set": bson.M{"hits": url.Hits + 1}})
+		updateLRU(mini, kv{k: mini, v: url.LongURL})
+		updateMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}, bson.M{"$inc": bson.M{"hits": 1}})
 		return
 	}
 	context.Status(404)
@@ -121,6 +155,7 @@ func getStats(context *gin.Context) {
 	}
 	if dburl, ok := findMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}); ok == nil {
 		context.JSON(200, dburl)
+		updateLRU(dburl.MiniURL, kv{k: dburl.MiniURL, v: dburl.LongURL})
 		return
 	}
 	context.Status(404)
@@ -132,9 +167,14 @@ func getStats(context *gin.Context) {
 // it returns an error if adding the struct to the database encounters an error
 func (u *miniAndLongURL) makeMini() error {
 	u.MiniURL = encode(hash32(u.LongURL))
+	if found := mapFind(u.MiniURL).Value.(kv).v; found != "" {
+		updateLRU(u.MiniURL, kv{k: u.MiniURL, v: u.LongURL})
+		return errors.New("That mini already exists")
+	}
 	if found, _ := findMini(bson.M{"miniurl": bson.M{"$eq": u.MiniURL}}); found.MiniURL != u.MiniURL {
 		u.Hits = 0
 		err := addMini(u)
+		updateLRU(u.MiniURL, kv{k: u.MiniURL, v: u.LongURL})
 		return err
 	}
 	return errors.New("That mini already exists")
@@ -222,4 +262,38 @@ func dbConnect() error {
 	}
 	db = client.Database(dbname).Collection(col)
 	return nil
+}
+
+// LRU functions
+// updateLRU removes oldest if limit is reached, adds new elements when used
+func updateLRU(mini string, val kv) {
+	if found := mapFind(mini); found.Value.(kv).v != "" {
+		mtx.Lock()
+		lru.MoveToFront(found)
+		mtx.Unlock()
+		return
+	}
+	tmp := list.Element{Value: val}
+	mtx.Lock()
+	lru.PushFront(&tmp)
+	m[mini] = &tmp
+	if lru.Len() > limit {
+		del := lru.Back()
+		if del != nil {
+			delete(m, del.Value.(*list.Element).Value.(kv).k)
+			lru.Remove(del)
+		}
+	}
+	mtx.Unlock()
+}
+
+// mapFind checks for existing keys in the map
+func mapFind(mini string) *list.Element {
+	mtx.RLock()
+	defer mtx.RUnlock()
+	if val, ok := m[mini]; ok {
+		return val
+	}
+	ret := list.Element{Value: kv{v: ""}}
+	return &ret
 }
