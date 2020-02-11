@@ -269,12 +269,13 @@ func dbConnect() error {
 func updateLRU(mini string, val kv) {
 	if found := mapFind(mini); found.Value.(kv).v != "" {
 		mtx.Lock()
+		defer mtx.Unlock()
 		lru.MoveToFront(found)
-		mtx.Unlock()
 		return
 	}
 	tmp := list.Element{Value: val}
 	mtx.Lock()
+	defer mtx.Unlock()
 	lru.PushFront(&tmp)
 	m[mini] = &tmp
 	if lru.Len() > limit {
@@ -284,7 +285,6 @@ func updateLRU(mini string, val kv) {
 			lru.Remove(del)
 		}
 	}
-	mtx.Unlock()
 }
 
 // mapFind checks for existing keys in the map
