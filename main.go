@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
@@ -151,8 +152,10 @@ func getStats(context *gin.Context) {
 		return
 	}
 	if len(url.MiniURL) > 6 {
-		url.MiniURL = url.MiniURL[len(url.MiniURL)-7 : len(url.MiniURL)-1]
+		url.MiniURL = url.MiniURL[len(url.MiniURL)-6 : len(url.MiniURL)]
+		fmt.Println(url.MiniURL)
 	}
+	fmt.Println(url.MiniURL)
 	if dburl, ok := findMini(bson.M{"miniurl": bson.M{"$eq": url.MiniURL}}); ok == nil {
 		context.JSON(200, dburl)
 		updateLRU(dburl.MiniURL, kv{k: dburl.MiniURL, v: dburl.LongURL})
@@ -166,6 +169,9 @@ func getStats(context *gin.Context) {
 // it calls helper functions to finish creation of the struct and add it to the database
 // it returns an error if adding the struct to the database encounters an error
 func (u *miniAndLongURL) makeMini() error {
+	if !checkURL(u.LongURL) {
+		u.LongURL = "http://" + u.LongURL
+	}
 	u.MiniURL = encode(hash32(u.LongURL))
 	if found := mapFind(u.MiniURL).Value.(kv).v; found != "" {
 		updateLRU(u.MiniURL, kv{k: u.MiniURL, v: u.LongURL})
@@ -195,6 +201,10 @@ func hash32(s string) []byte {
 func encode(m []byte) string {
 	ss := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(m)
 	return ss
+}
+
+func checkURL(url string) bool {
+	return len(url) > 4 && url[0:4] == "http"
 }
 
 // Converts the body of an HTTP Request to the miniAndLongURL struct
