@@ -12,6 +12,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/gin-contrib/cors"
@@ -203,8 +205,11 @@ func encode(m []byte) string {
 	return ss
 }
 
+// checks whether or not the url begins with http: or https:
+// if false, make mini will append http:// to the beginning of the url
 func checkURL(url string) bool {
-	return (len(url) > 7 && url[0:7] == "http://") || (len(url) > 8 && url[0:8] == "https://")
+	match, _ := regexp.MatchString("^http[s]?:/?/?", strings.ToLower(url))
+	return match
 }
 
 // Converts the body of an HTTP Request to the miniAndLongURL struct
