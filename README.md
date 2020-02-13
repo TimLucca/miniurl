@@ -13,6 +13,8 @@ The server will create the minified url and return the following JSON:
   "hits": <number of times link was used>
 }
 ```
+**note** that the URL should be valid. If `http://` or `https://` are not present, they will be added
+
 The miniurl on this request will include the entire url (ie. `https://damp-brushlands-93308.herokuapp.com/<miniurl>`). This will redirect you to the original url and increment the number of hits on that mini.
 
 To get statistics on your minified url, send a `POST` request to `https://damp-brushlands-93308.herokuapp.com/api/current` with the following payload:
