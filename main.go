@@ -204,7 +204,7 @@ func encode(m []byte) string {
 }
 
 func checkURL(url string) bool {
-	return len(url) > 4 && url[0:4] == "http"
+	return (len(url) > 7 && url[0:7] == "http://") || (len(url) > 8 && url[0:8] == "https://")
 }
 
 // Converts the body of an HTTP Request to the miniAndLongURL struct
