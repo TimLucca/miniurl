@@ -208,7 +208,7 @@ func encode(m []byte) string {
 // checks whether or not the url begins with http: or https:
 // if false, make mini will append http:// to the beginning of the url
 func checkURL(url string) bool {
-	match, _ := regexp.MatchString("^http[s]?:/?/?", strings.ToLower(url))
+	match, _ := regexp.MatchString("^http[s]?://", strings.ToLower(url))
 	return match
 }
 
